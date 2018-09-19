@@ -1,5 +1,29 @@
 def find_cycle(connections):
-    return []
+    def findloop(point, route, startpoint, lastpoint, connections):
+        for (i,j) in connections:
+            if point in (i,j):
+                if point == j:
+                    i,j = j,i
+                if j != lastpoint:
+                    if j == startpoint:
+                        resultlist.append(route+[j])
+                    elif j not in route:
+                        findloop(j, route+[j], startpoint, i, connections)
+
+    elementbook = set()
+    resultlist = []
+    for (i,j) in connections:
+        elementbook.add(i)
+        elementbook.add(j)
+
+    for i in elementbook:
+        findloop(i, [i], i, i, connections)
+
+    if resultlist:
+        resultlist.sort(key = lambda x: len(x), reverse = True)
+        return resultlist[0]
+    else:
+        return []
 
 if __name__ == '__main__':
     # These "asserts" using only for self-checking and not necessary for auto-testing
@@ -27,6 +51,7 @@ if __name__ == '__main__':
                 print("{}-{} is not exist".format(n1, n2))
                 return False
         return True, "Ok"
+
     
     assert checker(find_cycle, 
                    ((1, 2), (2, 3), (3, 4), (4, 5), (5, 7), (7, 6),
