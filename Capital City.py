@@ -1,3 +1,22 @@
+class Singleton(object):
+    def __new__(cls, city_name):
+        if not hasattr(cls, '_instance'):
+            orig = super(Singleton,cls)
+            cls._instance = orig.__new__(cls)
+        return cls._instance
+
+class Capital(Singleton):
+    Name = ""
+    
+    def __init__(self,city_name):
+        if not Capital.Name:
+            Capital.Name = city_name
+
+    def name(self):
+            return Capital.Name
+
+'''
+Alternative
 class Capital(object):
     Name = ""
 
@@ -10,6 +29,8 @@ class Capital(object):
 
     def name(self):
             return Capital.Name
+'''
+
 
 if __name__ == '__main__':
     #These "asserts" using only for self-checking and not necessary for auto-testing
