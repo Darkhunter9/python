@@ -126,3 +126,5 @@ plt.ylabel('p_y')
 plt.scatter([x[0] for x in polefigure3], [x[1] for x in polefigure3], s=2)
 plt.plot(x, y, color='black', linewidth=2.0)
 plt.show()
+
+print('completed')
