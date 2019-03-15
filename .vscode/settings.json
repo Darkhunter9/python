@@ -1,6 +1,3 @@
 {
-    "python.pythonPath": "C:\\Program Files (x86)\\Python\\python.exe",
-    "code-runner.cwd": "C:\\Program Files (x86)\\Python",
-    "code-runner.defaultLanguage": "python",
-    "python.linting.pylintEnabled": true,
+    
 }
