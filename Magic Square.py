@@ -1,42 +1,39 @@
-import numpy as np
-from copy import copy
-from itertools import permutations
+from copy import deepcopy
+from itertools import chain, product
 
-def check(square):
-    if np.count_nonzero(square) != square.shape[0]*square.shape[1]:
-        return False
-    else:
-        temp1 = np.sum(square, axis=1)
-        temp2 = np.sum(square.T, axis=1)
-        temp3 = np.sum(np.diagonal(square))
-        temp4 = np.sum(np.diagonal(square[::-1]))
-        if temp3 != temp4 or np.any(temp3 != temp1) or np.any(temp3 != temp2):
-            return False
-    return True
+
+def is_possible(board):
+    def check_line(line):
+        return sum(line) == target if all(line) else sum(line) < target
+    def check_diag(board):
+        values = [board[i][i] for i in range(n)]
+        return sum(values) == target if all(values) else sum(values) < target
+
+    n = len(board)
+    target = 0.5 * n * (n**2 + 1)
+
+    return (all(check_line(row) for row in board) and
+            all(check_line(col) for col in zip(*board)) and
+            check_diag(board) and
+            check_diag(list(zip(*board[::-1]))))
+
 
 def checkio(data):
-    if type(data) != np.ndarray:
-        square = np.array(data)
-    else:
-        square = data
-
     n = len(data)
-    templist = []
+    nr = range(n)
+    candidates = set(range(n**2 + 1)) - set(chain.from_iterable(data))
 
-    coord = np.where(square == 0)
+    stack = [(deepcopy(data), candidates)]
+    while stack:
+        board, unused = stack.pop()
+        if not unused:
+            return board
 
-    for i in range(1,n**2+1):
-        if i not in square:
-            templist.append(i)
-    
-    for i in permutations(templist):
-        squarecopy = copy(square)
-        count = 0
-        for j in zip(coord[0], coord[1]):
-            squarecopy[j] = i[count]
-            count += 1
-        if check(squarecopy):
-            return squarecopy.tolist()
+        r, c = next((r, c) for r, c in product(nr, repeat=2) if not board[r][c])
+        for candidate in unused:
+            board[r][c] = candidate
+            if is_possible(board):
+                stack.append((deepcopy(board), unused-{candidate}))
 
 
 
@@ -51,8 +48,8 @@ if __name__ == '__main__':
         #check sizes
         N = len(result)
         if len(result) == N:
-            for row in result:
-                if len(row) != N:
+            for r in result:
+                if len(r) != N:
                     print(SIZE_ERROR)
                     return False
         else:
@@ -61,12 +58,12 @@ if __name__ == '__main__':
         #check is it a magic square
         # line_sum = (N * (N ** 2 + 1)) / 2
         line_sum = sum(result[0])
-        for row in result:
-            if sum(row) != line_sum:
+        for r in result:
+            if sum(r) != line_sum:
                 print(MS_ERROR)
                 return False
-        for col in zip(*result):
-            if sum(col) != line_sum:
+        for c in zip(*result):
+            if sum(c) != line_sum:
                 print(MS_ERROR)
                 return False
         if sum([result[i][i] for i in range(N)]) != line_sum:
