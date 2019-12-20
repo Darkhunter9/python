@@ -4,36 +4,87 @@ from copy import deepcopy
 def broken_window(pieces: List[List[int]]) -> Tuple[List[int], List[int]]:
     queue = []
     l = int(sum([len(i)-1 for i in pieces])/2)
-    height = int(sum([sum(i) for i in pieces])/(l+1))
+    height = int(sum([sum([(i[j]+i[j+1])*0.5 for j in range(len(i)-1)]) for i in pieces])/l)
 
     def complete(bottom,top):
-        bottom_h = [0]
-        top_h = [0]
+        '''
+        calculate the number of completed points
+        raise ValueError if clearly the order doesn't work
+        '''
+
+        bottom_h = []
+        top_h = []
+        c = 0
 
         if bottom:
-            for i in range(len(bottom)):
-                bottom_h[-1] = max(bottom_h[-1],bottom[i][0])
+            bottom_h = deepcopy(bottom[0])
+            for i in range(1,len(bottom)):
+                bottom_h[-1] = [bottom_h[-1],bottom[i][0]]
                 bottom_h += bottom[i][1:]
         
         if top:
-            for i in range(len(top)):
-                top_h[-1] = max(top_h[-1],top[i][-1])
+            top_h = deepcopy(top[0][::-1])
+            for i in range(1,len(top)):
+                top_h[-1] = [top_h[-1],top[i][-1]]
                 top_h += top[i][::-1][1:]
         
-        result = [0]*(l+1)
-        for i in range(len(bottom_h)):
-            result[i] += bottom_h[i]
-        for i in range(len(top_h)):
-            result[i] += top_h[i]
+        n = min(len(bottom_h),len(top_h))
+        for i in range(n):
+            if isinstance(bottom_h[i], int) and isinstance(top_h[i],int):
+                if bottom_h[i] + top_h[i] != height:
+                    raise ValueError
+                else:
+                    c += 1
+            elif isinstance(bottom_h[i], list) and isinstance(top_h[i],list):
+                if bottom_h[i][0] + top_h[i][0] == bottom_h[i][1] + top_h[i][1] == height:
+                    c += 1
+                else:
+                    raise ValueError
+            elif isinstance(bottom_h[i], int) and isinstance(top_h[i],list):
+                if i < n-1 or i == len(bottom_h)-1:
+                    if bottom_h[i] + top_h[i][0] != height:
+                        raise ValueError
+                    else:
+                        c += 1
+                else:
+                    if bottom_h[i] + top_h[i][0] == bottom_h[i] + top_h[i][1] == height:
+                        c += 1
+                    else:
+                        raise ValueError
+            elif isinstance(bottom_h[i], list) and isinstance(top_h[i],int): 
+                if i < n-1 or i == len(top_h)-1:
+                    if bottom_h[i][0] + top_h[i] != height:
+                        raise ValueError
+                    else:
+                        c += 1
+                else:
+                    if bottom_h[i][0] + top_h[i] == bottom_h[i][1] + top_h[i] == height:
+                        c += 1
+                    else:
+                        raise ValueError
 
-        if any(result[i] > height for i in range(len(result))):
-            raise ValueError
-
-        for i in range(len(result)):
-            if result[i] < height:
-                return i
-        return l+1
+        return c
     
+    def output():
+        [bottom, top, temp_pieces] = queue[-1]
+        bottom_indices = []
+        top_indices = []
+
+        for i in bottom:
+            indices = [j for j, x in enumerate(pieces) if x == i]
+            for j in indices:
+                if j not in bottom_indices and j not in top_indices:
+                    bottom_indices.append(j)
+                    break
+        for i in top:
+            indices = [j for j, x in enumerate(pieces) if x == i]
+            for j in indices:
+                if j not in bottom_indices and j not in top_indices:
+                    top_indices.append(j)
+                    break
+        
+        return (top_indices,bottom_indices)
+
     for i in pieces:
         temp_pieces = deepcopy(pieces)
         temp_pieces.remove(i)        
@@ -47,42 +98,24 @@ def broken_window(pieces: List[List[int]]) -> Tuple[List[int], List[int]]:
             for i in temp_pieces:
                 try:
                     c2 = complete(bottom,top+[i])
-                    # if c2 > c:
                     temp_pieces2 = deepcopy(temp_pieces)
                     temp_pieces2.remove(i)
                     queue.append([bottom,top+[i],temp_pieces2])
+                    if 'c2' in locals() and c2 == l+1:
+                        return output()
                 except:
                     pass
         else:
             for i in temp_pieces:
                 try:
                     c2 = complete(bottom+[i],top)
-                    # if c2 > c:
                     temp_pieces2 = deepcopy(temp_pieces)
                     temp_pieces2.remove(i)
                     queue.append([bottom+[i],top,temp_pieces2])
+                    if 'c2' in locals() and c2 == l+1:
+                        return output()
                 except:
                     pass
-        
-        if c2 == l+1:
-            [bottom, top, temp_pieces] = queue[-1]
-            bottom_indices = []
-            top_indices = []
-
-            for i in bottom:
-                indices = [j for j, x in enumerate(pieces) if x == i]
-                for j in indices:
-                    if j not in bottom_indices and j not in top_indices:
-                        bottom_indices.append(j)
-                        break
-            for i in top:
-                indices = [j for j, x in enumerate(pieces) if x == i]
-                for j in indices:
-                    if j not in bottom_indices and j not in top_indices:
-                        top_indices.append(j)
-                        break
-            
-            return (top_indices,bottom_indices)
 
     return ([],[])
 
@@ -131,6 +164,8 @@ if __name__ == '__main__':
 
     print("Example:")
     # print(broken_window([[0, 1], [0, 1]]))
+    assert checker(broken_window, [[9,7,6,13],[11,2],[0,2],[2,1,10,8,0],[11,2],[3,0],[0,7,6,4],[0,10,9,11,8,2],[11,13,5,3,12,11,5,2,4,3,13,10]])
+    assert checker(broken_window, [[0,3,0],[0,1,1,0],[3,0],[0,3,2,2,3]])
     assert checker(broken_window, [[0, 3, 1, 3], [2, 4,2,5,4,2,3,4], [1,2,3,1,0]])
     assert checker(broken_window, [[0, 3, 4, 1], [4, 0], [3, 0], [0, 1, 4, 0]])
     assert checker(broken_window, [[0, 1], [0, 1]])
